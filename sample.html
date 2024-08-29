@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <button id="startButton">Start Recording</button>
+    <button id="stopButton" disabled>Stop Recording</button>
+    <video id="video" controls height="200" width="400"></video>
+
+    <script>
+        const startButton = document.querySelector('#startButton');
+        const stopButton = document.querySelector('#stopButton');
+        const video = document.querySelector('#video');
+        let mediaRecorder;
+        let recordedChunks = [];
+
+        startButton.addEventListener('click', () => {
+            startButton.disabled = true;
+            stopButton.disabled = false;
+            navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
+                .then(stream => {
+                    mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/mp4; codecs="avc1"' });
+                    mediaRecorder.start(1000);
+                    mediaRecorder.addEventListener('dataavailable', function(e) {
+                        if (e.data.size > 0) {
+                            recordedChunks.push(e.data);
+                        }
+                    });
+                });
+        });
+
+        stopButton.addEventListener('click', () => {
+            stopButton.disabled = true;
+            startButton.disabled = false;
+            mediaRecorder.stop();
+            const blob = new Blob(recordedChunks, {
+                type: 'video/mp4; codecs="avc1"'
+            });
+            const url = URL.createObjectURL(blob);
+            video.src = url;
+            recordedChunks = [];
+        });
+    </script>
+</body>
+</html>
